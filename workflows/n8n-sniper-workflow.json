@@ -1,0 +1,127 @@
+{
+  "name": "Aivora Sniper - Lead Qualification",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aivora-lead-sniper",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.exemplo-ia.com/v1/score",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ { \"nome\": $json.nome, \"origem\": $json.origem, \"mensagem\": $json.mensagem } }}"
+      },
+      "name": "AI Predictor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.score_ia }}",
+              "operation": "larger",
+              "value2": 80
+            }
+          ]
+        }
+      },
+      "name": "Lead Quente?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO leads_sniper (nome, origem, score_ia, status, contato_verificado) VALUES ({{$json.nome}}, {{$json.origem}}, {{$json.score_ia}}, 'quente', false);"
+      },
+      "name": "SQL Insert",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        780,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "Novo lead quente: {{$json.nome}} ({{$json.origem}}) - Score {{$json.score_ia}}"
+      },
+      "name": "Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        780,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Predictor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Predictor": {
+      "main": [
+        [
+          {
+            "node": "Lead Quente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Quente?": {
+      "main": [
+        [
+          {
+            "node": "SQL Insert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "aivora-sniper-workflow"
+}
