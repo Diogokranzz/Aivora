@@ -1,0 +1,250 @@
+{
+    "name": "Aivora - Lead Qualification Pipeline (Production)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "aivora-lead-sniper",
+                "responseMode": "onReceived",
+                "options": {}
+            },
+            "name": "Webhook_Entry",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                0,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "nome",
+                            "name": "nome",
+                            "value": "={{ $json[\"body\"]?.[\"nome\"] || $json[\"nome\"] || $json[\"query\"]?.[\"nome\"] }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "origem",
+                            "name": "origem",
+                            "value": "={{ $json[\"body\"]?.[\"origem\"] || $json[\"origem\"] || $json[\"query\"]?.[\"origem\"] }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "income",
+                            "name": "income",
+                            "value": "={{ $json[\"body\"]?.[\"income\"] || $json[\"income\"] || $json[\"query\"]?.[\"income\"] }}",
+                            "type": "number"
+                        },
+                        {
+                            "id": "verified",
+                            "name": "verified",
+                            "value": "={{ $json[\"body\"]?.[\"verified\"] || $json[\"verified\"] || $json[\"query\"]?.[\"verified\"] }}",
+                            "type": "boolean"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Data_Normalization",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                220,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://aivora-core:8080/v1/sniper/qualify",
+                "method": "POST",
+                "sendBody": true,
+                "sendHeaders": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ { \"income\": $json.income, \"verified\": $json.verified } }}",
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "X-API-KEY",
+                            "value": "aivora-secure-key-2025"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "API_Score_Predictor",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                440,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "score_final",
+                            "name": "score_final",
+                            "value": "={{ parseInt($json.score) }}",
+                            "type": "number"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Score_Type_Casting",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                660,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "dataType": "number",
+                "value1": "={{ $json.score_final }}",
+                "rules": {
+                    "rules": [
+                        {
+                            "value2": 80,
+                            "operation": "largerEqual",
+                            "output": 0
+                        },
+                        {
+                            "value2": 80,
+                            "operation": "smaller",
+                            "output": 1
+                        }
+                    ]
+                }
+            },
+            "name": "Priority_Router",
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 1,
+            "position": [
+                880,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "={{ 'INSERT INTO leads_sniper (nome, origem, score_ia, status, contato_verificado) VALUES (\\'' + $node[\"Data_Normalization\"].json[\"nome\"] + '\\', \\'' + $node[\"Data_Normalization\"].json[\"origem\"] + '\\', ' + $json.score_final + ', \\'quente\\', false);' }}"
+            },
+            "name": "DB_Insert_Lead",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                1100,
+                -100
+            ]
+        },
+        {
+            "parameters": {
+                "resource": "message",
+                "operation": "sendMessage",
+                "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+                "text": "={{ '[LEAD INFO] Priority: HIGH | Name: ' + $node[\"Data_Normalization\"].json[\"nome\"] + ' | Origin: ' + $node[\"Data_Normalization\"].json[\"origem\"] + ' | Score: ' + $json.score_final }}"
+            },
+            "name": "Notify_High_Priority",
+            "type": "n8n-nodes-base.telegram",
+            "typeVersion": 1,
+            "position": [
+                1100,
+                100
+            ]
+        },
+        {
+            "parameters": {
+                "resource": "message",
+                "operation": "sendMessage",
+                "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+                "text": "={{ '[LEAD INFO] Priority: LOW | Name: ' + $node[\"Data_Normalization\"].json[\"nome\"] + ' | Score: ' + $json.score_final + ' | Status: REJECTED' }}"
+            },
+            "name": "Notify_Low_Priority",
+            "type": "n8n-nodes-base.telegram",
+            "typeVersion": 1,
+            "position": [
+                1100,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook_Entry": {
+            "main": [
+                [
+                    {
+                        "node": "Data_Normalization",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Data_Normalization": {
+            "main": [
+                [
+                    {
+                        "node": "API_Score_Predictor",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "API_Score_Predictor": {
+            "main": [
+                [
+                    {
+                        "node": "Score_Type_Casting",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Score_Type_Casting": {
+            "main": [
+                [
+                    {
+                        "node": "Priority_Router",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Priority_Router": {
+            "main": [
+                [
+                    {
+                        "node": "DB_Insert_Lead",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Notify_High_Priority",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Notify_Low_Priority",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": true,
+    "settings": {},
+    "id": "aivora-production-workflow"
+}

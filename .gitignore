@@ -1,0 +1,30 @@
+# Segurança (CRÍTICO)
+.env
+.env.*
+*.log
+*.sh
+
+# Build Artifacts (C++)
+aivora_core
+*.o
+*.out
+bin/
+obj/
+
+# Dependências Externas (Baixadas)
+asio-asio-1-28-0/
+asio.tar.gz
+
+# IDE / Sistema
+.vscode/
+.idea/
+.DS_Store
+
+# Docker Data (Se existirem localmente)
+postgres_data/
+n8n_data/
+metabase_data/
+
+# Workflows (Ignorar versões antigas se existirem, manter apenas producao)
+workflows/n8n-final-*.json
+workflows/n8n-sniper-workflow.json
