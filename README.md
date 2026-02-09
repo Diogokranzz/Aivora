@@ -1,31 +1,31 @@
-# Aivora - Sistema de Qualificacao de Leads Empresarial
+# Aivora : Sistema de Qualificação de Leads Empresarial
 
-Aivora e um sistema de qualificacao de leads de alta performance, seguro e escalavel, projetado para ambientes corporativos. Combina um motor de decisao em C++ com uma camada de orquestracao low-code (n8n) e analise avancada de dados (Metabase).
+Aivora é um sistema de qualificação de leads de alta performance, seguro e escalável, projetado para ambientes corporativos. Combina um motor de decisão em C++ com uma camada de orquestração low-code (n8n) e análise avançada de dados (Metabase).
 
 ## Arquitetura
 
-O sistema e composto por quatro microsservicos isolados rodando em Docker:
+O sistema é composto por quatro microsserviços isolados rodando em Docker:
 
-1.  **Aivora Core (C++)**: Motor de decisao standalone. Alta performance, baixa latencia e protegido por autenticacao via API Key.
-2.  **Orquestrador (n8n)**: Gerencia a ingestao de dados (Webhooks), normalizacao e comunicacao entre servicos.
-3.  **Banco de Dados (PostgreSQL)**: Armazenamento otimizado com indices para recuperacao rapida de informacoes.
-4.  **Analytics (Metabase)**: Dashboard de inteligencia de negocios para insights em tempo real.
+1.  **Aivora Core (C++)**: Motor de decisão standalone. Alta performance, baixa latência e protegido por autenticação via API Key.
+2.  **Orquestrador (n8n)**: Gerencia a ingestão de dados (Webhooks), normalização e comunicação entre serviços.
+3.  **Banco de Dados (PostgreSQL)**: Armazenamento otimizado com índices para recuperação rápida de informações.
+4.  **Analytics (Metabase)**: Dashboard de inteligência de negócios para insights em tempo real.
 
-## Recursos de Seguranca
+## Recursos de Segurança
 
--   **Autenticacao de API**: O Core C++ e protegido pelo header `X-API-KEY`.
--   **Gerenciamento de Segredos**: Credenciais sensiveis (IDs, Chaves, Senhas) sao gerenciadas via arquivos `.env` e segredos do Docker. O acesso as variaveis de ambiente e estritamente controlado.
--   **Validacao de Entrada**: Validacao rigorosa contra JSON malformado e verificacoes numericas negativas.
--   **Isolamento de Rede**: Os servicos se comunicam via rede interna do Docker; apenas as portas necessarias sao expostas.
+-   **Autenticação de API**: O Core C++ é protegido pelo header `X-API-KEY`.
+-   **Gerenciamento de Segredos**: Credenciais sensíveis (IDs, Chaves, Senhas) são gerenciadas via arquivos `.env` e segredos do Docker. O acesso às variáveis de ambiente é estritamente controlado.
+-   **Validação de Entrada**: Validação rigorosa contra JSON malformado e verificações numéricas negativas.
+-   **Isolamento de Rede**: Os serviços se comunicam via rede interna do Docker; apenas as portas necessárias são expostas.
 
-## Configuracao e Deploy
+## Configuração e Deploy
 
-### Pre-requisitos
+### Pré-requisitos
 
 -   Docker & Docker Compose
 -   Git
 
-### Instalacao
+### Instalação
 
 1.  **Clonar o repositorio:**
     ```bash
@@ -33,7 +33,7 @@ O sistema e composto por quatro microsservicos isolados rodando em Docker:
     cd Aivora
     ```
 
-2.  **Configurar Seguranca:**
+2.  **Configurar Segurança:**
     Crie um arquivo `.env` no diretorio raiz (nao faca commit deste arquivo):
     ```env
     TELEGRAM_CHAT_ID=seu_chat_id_telegram
@@ -46,7 +46,7 @@ O sistema e composto por quatro microsservicos isolados rodando em Docker:
     sudo docker compose up --build -d
     ```
 
-4.  **Acessar Servicos:**
+4.  **Acessar Serviços:**
     -   **n8n (Fluxos de Trabalho):** `http://localhost:5680`
     -   **Metabase (Dashboard):** `http://localhost:3000`
     -   **Endpoint da API:** `http://localhost:8080/v1/sniper/qualify` (Requer Header `X-API-KEY`)
@@ -73,6 +73,6 @@ O sistema e composto por quatro microsservicos isolados rodando em Docker:
 }
 ```
 
-## Licenca
+## Licença
 
-Software Proprietario. A copia não autorizada deste arquivo, por qualquer meio, é estritamente proibida.
+Software Proprietário. A cópia não autorizada deste arquivo, por qualquer meio, é estritamente proibida.
