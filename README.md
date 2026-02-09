@@ -1,4 +1,10 @@
-# Aivora : Sistema de Qualificação de Leads Empresarial
+<div align="center">
+  <img src="assets/logo.png" alt="Aivora Logo" width="200" style="border-radius: 10px;">
+  <h1>Aivora</h1>
+  <h3>Sistema de Qualificação de Leads Empresarial</h3>
+</div>
+
+<br>
 
 Aivora é um sistema de qualificação de leads de alta performance, seguro e escalável, projetado para ambientes corporativos. Combina um motor de decisão em C++ com uma camada de orquestração low-code (n8n) e análise avançada de dados (Metabase).
 
